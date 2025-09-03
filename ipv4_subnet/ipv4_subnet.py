@@ -29,16 +29,12 @@ __all__ = [
 ]
 
 def _net(subnet: str) -> IPv4Network:
-    """
-    解析字串為 IPv4Network（允許 '主機/斜線'，自動對齊）。
-    壞格式或非 IPv4 一律轉為 ValueError。
-    """
     try:
         n = ip_network(subnet, strict=False)
     except Exception as e:
         raise ValueError(f"invalid subnet: {subnet}") from e
+    # 關鍵：拒絕 IPv6 前綴
     if not isinstance(n, IPv4Network):
-        # 防止傳入 IPv6 前綴
         raise ValueError(f"not an IPv4 subnet: {subnet}")
     return n
 
@@ -83,15 +79,12 @@ def hosts_count(subnet: str) -> int:
     return n.num_addresses - 2
 
 def contains(subnet: str, ip: str) -> bool:
-    """
-    判斷位址 ip 是否落在 subnet 裡（含端點）。
-    備註：僅接受 IPv4 位址；IPv6 輸入將拋 ValueError。
-    """
     n = _net(subnet)
     try:
         a = ip_address(ip)
     except Exception as e:
         raise ValueError(f"invalid ip: {ip}") from e
+    # 關鍵：拒絕 IPv6 位址
     if not isinstance(a, IPv4Address):
         raise ValueError(f"not an IPv4 address: {ip}")
     return a in n
